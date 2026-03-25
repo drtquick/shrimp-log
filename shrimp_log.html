@@ -78,6 +78,13 @@
     margin-top: 0.3rem;
   }
 
+  .header-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+  }
+
   .stats-bar { display: flex; gap: 1.5rem; font-size: 0.7rem; color: var(--muted); }
 
   .stat strong {
@@ -88,6 +95,47 @@
     font-weight: 300;
   }
 
+  .header-bottom {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .sync-status {
+    font-size: 0.58rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .sync-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: background 0.3s;
+  }
+
+  .sync-dot.live  { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+  .sync-dot.error { background: var(--danger); }
+
+  .btn-settings {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    cursor: pointer;
+    padding: 0.3rem 0.65rem;
+    border-radius: 3px;
+    transition: all 0.15s;
+    letter-spacing: 0.08em;
+  }
+
+  .btn-settings:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── Legend ── */
   .legend {
     display: flex;
     flex-wrap: wrap;
@@ -108,6 +156,7 @@
     flex-shrink: 0;
   }
 
+  /* ── Entry form ── */
   .entry-form {
     background: var(--panel);
     border: 1px solid var(--border);
@@ -141,7 +190,9 @@
     color: var(--muted);
   }
 
-  .field input {
+  .field input[type="text"],
+  .field input[type="number"],
+  .field input[type="date"] {
     background: var(--input-bg);
     border: 1px solid var(--border);
     color: var(--text);
@@ -175,10 +226,11 @@
     height: 36px;
   }
 
-  .btn-add:hover { opacity: 0.85; }
-  .btn-add:active { transform: scale(0.97); }
+  .btn-add:hover    { opacity: 0.85; }
+  .btn-add:active   { transform: scale(0.97); }
   .btn-add:disabled { opacity: 0.4; cursor: not-allowed; }
 
+  /* ── Table ── */
   .table-wrap {
     overflow-x: auto;
     border: 1px solid var(--border);
@@ -256,7 +308,6 @@
 
   .count-cell { font-weight: 700; color: var(--accent); min-width: 40px; }
   .count-cell.zero { color: var(--muted); font-weight: 400; opacity: 0.4; }
-
   .actions-cell { white-space: nowrap; }
 
   .btn-icon {
@@ -272,12 +323,12 @@
     margin-left: 2px;
   }
 
-  .btn-icon:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-icon:hover     { border-color: var(--accent); color: var(--accent); }
   .btn-icon.del:hover { border-color: var(--danger); color: var(--danger); }
 
-  tr.edit-row { background: var(--edit-bg) !important; }
-  tr.edit-row:hover { background: var(--edit-bg) !important; }
-  tr.edit-row td { padding: 0.35rem 0.4rem; }
+  tr.edit-row           { background: var(--edit-bg) !important; }
+  tr.edit-row:hover     { background: var(--edit-bg) !important; }
+  tr.edit-row td        { padding: 0.35rem 0.4rem; }
 
   .edit-input {
     background: var(--input-bg);
@@ -368,43 +419,314 @@
     letter-spacing: 0.05em;
   }
 
-  .sync-status {
-    font-size: 0.58rem;
-    color: var(--muted);
-    letter-spacing: 0.08em;
+  /* ── Settings overlay ── */
+  .settings-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 100;
+    display: none;
+    align-items: flex-start;
+    justify-content: flex-end;
+  }
+
+  .settings-overlay.open { display: flex; }
+
+  .settings-drawer {
+    background: var(--panel);
+    border-left: 1px solid var(--border);
+    width: 360px;
+    max-width: 100vw;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 1.75rem 1.5rem 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .settings-header {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1rem;
   }
 
-  .sync-dot {
-    width: 6px; height: 6px;
+  .settings-header h2 {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: 1.1rem;
+    color: var(--accent);
+    letter-spacing: 0.03em;
+  }
+
+  .btn-close-settings {
+    background: none;
+    border: 1px solid transparent;
+    color: var(--muted);
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+    transition: all 0.15s;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .btn-close-settings:hover { border-color: var(--danger); color: var(--danger); }
+
+  .settings-section-title {
+    font-size: 0.58rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+    margin-bottom: 0.75rem;
+  }
+
+  /* Color list rows */
+  .color-list { display: flex; flex-direction: column; gap: 0.4rem; }
+
+  .color-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 0.65rem;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    transition: border-color 0.15s;
+  }
+
+  .color-row:hover { border-color: var(--muted); }
+
+  .color-row-swatch {
+    width: 14px; height: 14px;
     border-radius: 50%;
-    background: var(--muted);
-    transition: background 0.3s;
+    border: 1px solid rgba(255,255,255,0.15);
+    flex-shrink: 0;
   }
 
-  .sync-dot.live { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
-  .sync-dot.error { background: var(--danger); }
+  .color-row-name {
+    flex: 1;
+    font-size: 0.7rem;
+    color: var(--text);
+    background: none;
+    border: none;
+    outline: none;
+    font-family: 'Space Mono', monospace;
+    padding: 0;
+    cursor: text;
+  }
+
+  .color-row-name:focus {
+    border-bottom: 1px solid var(--accent);
+  }
+
+  .color-row-badge {
+    font-size: 0.5rem;
+    color: var(--accent2);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border: 1px solid rgba(0,196,255,0.3);
+    padding: 0.1rem 0.35rem;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+
+  .color-row-del {
+    background: none;
+    border: 1px solid transparent;
+    color: var(--muted);
+    font-size: 0.65rem;
+    cursor: pointer;
+    padding: 0.15rem 0.35rem;
+    border-radius: 3px;
+    transition: all 0.15s;
+    font-family: 'Space Mono', monospace;
+    flex-shrink: 0;
+  }
+
+  .color-row-del:hover { border-color: var(--danger); color: var(--danger); }
+
+  /* Add color form */
+  .add-color-form {
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .add-color-form label {
+    font-size: 0.58rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+
+  .add-color-form input[type="text"] {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    padding: 0.45rem 0.6rem;
+    border-radius: 3px;
+    outline: none;
+    width: 100%;
+    transition: border-color 0.2s;
+  }
+
+  .add-color-form input[type="text"]:focus { border-color: var(--accent); }
+
+  .color-picker-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .color-picker-row input[type="color"] {
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: none;
+    cursor: pointer;
+    padding: 2px;
+  }
+
+  .color-picker-row span {
+    font-size: 0.65rem;
+    color: var(--muted);
+  }
+
+  .baby-toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.65rem;
+    color: var(--muted);
+    cursor: pointer;
+  }
+
+  .baby-toggle-row input[type="checkbox"] {
+    accent-color: var(--accent2);
+    width: 13px;
+    height: 13px;
+    cursor: pointer;
+  }
+
+  .btn-add-color {
+    background: none;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.45rem 0;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s;
+    width: 100%;
+  }
+
+  .btn-add-color:hover { background: var(--accent); color: var(--bg); }
+
+  .btn-restore {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.45rem 0;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s;
+    width: 100%;
+    margin-top: 0.25rem;
+  }
+
+  .btn-restore:hover { border-color: var(--muted); color: var(--text); }
+
+  .settings-note {
+    font-size: 0.58rem;
+    color: var(--muted);
+    line-height: 1.6;
+    letter-spacing: 0.03em;
+  }
 </style>
 </head>
 <body>
-<div class="container">
 
+<!-- Settings overlay -->
+<div class="settings-overlay" id="settings-overlay" onclick="window._closeSettingsIfOutside(event)">
+  <div class="settings-drawer" id="settings-drawer">
+    <div class="settings-header">
+      <h2>Color Settings</h2>
+      <button class="btn-close-settings" onclick="window._closeSettings()">✕</button>
+    </div>
+
+    <div>
+      <p class="settings-section-title">Active Colors</p>
+      <div class="color-list" id="settings-color-list"></div>
+    </div>
+
+    <div>
+      <p class="settings-section-title">Add a Color</p>
+      <div class="add-color-form">
+        <div>
+          <label>Name</label>
+          <input type="text" id="new-color-name" placeholder="e.g. Green, Pink Rili…">
+        </div>
+        <div>
+          <label>Color</label>
+          <div class="color-picker-row">
+            <input type="color" id="new-color-picker" value="#3fffa2">
+            <span id="new-color-hex">#3fffa2</span>
+          </div>
+        </div>
+        <label class="baby-toggle-row">
+          <input type="checkbox" id="new-color-baby">
+          Mark as juvenile / baby
+        </label>
+        <button class="btn-add-color" onclick="window._addColor()">+ Add Color</button>
+      </div>
+    </div>
+
+    <div>
+      <p class="settings-section-title">Manage</p>
+      <button class="btn-restore" onclick="window._restoreDefaults()">↺ Restore Default Colors</button>
+      <p class="settings-note" style="margin-top:0.75rem">Deleting a color hides it from the form and table but does not erase count data from existing log entries.</p>
+    </div>
+  </div>
+</div>
+
+<div class="container">
   <header>
     <div class="logo-group">
       <h1>Neo<span>cardinia</span> Log</h1>
       <p>Shrimp Population Tracker</p>
     </div>
-    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.5rem">
+    <div class="header-right">
       <div class="stats-bar">
         <div class="stat"><strong id="stat-entries">0</strong>entries</div>
         <div class="stat"><strong id="stat-last">—</strong>last logged</div>
         <div class="stat"><strong id="stat-peak">—</strong>peak count</div>
       </div>
-      <div class="sync-status">
-        <span class="sync-dot" id="sync-dot"></span>
-        <span id="sync-label">connecting…</span>
+      <div class="header-bottom">
+        <div class="sync-status">
+          <span class="sync-dot" id="sync-dot"></span>
+          <span id="sync-label">connecting…</span>
+        </div>
+        <button class="btn-settings" onclick="window._openSettings()">⚙ Colors</button>
       </div>
     </div>
   </header>
@@ -424,14 +746,13 @@
       <tbody id="table-body"></tbody>
     </table>
   </div>
-
 </div>
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js';
 import {
   getFirestore, collection, addDoc, deleteDoc, updateDoc,
-  doc, onSnapshot, query, orderBy
+  doc, setDoc, onSnapshot, query, orderBy, getDoc
 } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
 
 const firebaseConfig = {
@@ -447,8 +768,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 const entriesCol = collection(db, 'entries');
+const colorsDoc  = doc(db, 'config', 'colors');
 
-const COLORS = [
+// ── Default colors ───────────────────────────────────────
+const DEFAULT_COLORS = [
   { key: 'red',       label: 'Red',         dot: '#e8352a' },
   { key: 'blue',      label: 'Blue',        dot: '#2a6de8' },
   { key: 'orange',    label: 'Orange',      dot: '#f07020' },
@@ -465,10 +788,11 @@ const COLORS = [
   { key: 'otherbaby', label: 'Other Baby',  dot: '#b0a0c0', baby: true },
 ];
 
+let COLORS    = [...DEFAULT_COLORS];
 let entries   = [];
 let editingId = null;
 
-// ── Sync status ─────────────────────────────────────────
+// ── Sync status ──────────────────────────────────────────
 function setSyncStatus(state) {
   const dot   = document.getElementById('sync-dot');
   const label = document.getElementById('sync-label');
@@ -476,7 +800,21 @@ function setSyncStatus(state) {
   label.textContent = state === 'live' ? 'live sync' : state === 'error' ? 'sync error' : 'connecting…';
 }
 
-// ── Legend ──────────────────────────────────────────────
+// ── Save colors to Firestore ─────────────────────────────
+async function saveColors(list) {
+  await setDoc(colorsDoc, { list });
+}
+
+// ── Rebuild UI after color change ────────────────────────
+function rebuildUI() {
+  buildLegend();
+  buildForm();
+  buildTableHead();
+  buildSettingsColorList();
+  render();
+}
+
+// ── Legend ───────────────────────────────────────────────
 function buildLegend() {
   document.getElementById('legend').innerHTML = COLORS.map(c => {
     const babyMark = c.baby ? ' <span style="font-size:0.55rem;color:var(--accent2)">(baby)</span>' : '';
@@ -487,7 +825,7 @@ function buildLegend() {
   }).join('');
 }
 
-// ── New-entry form ──────────────────────────────────────
+// ── Entry form ───────────────────────────────────────────
 function buildForm() {
   const today = new Date().toISOString().split('T')[0];
   let html = `<div class="field date-field">
@@ -508,7 +846,7 @@ function buildForm() {
   document.getElementById('form-row').innerHTML = html;
 }
 
-// ── Table head ──────────────────────────────────────────
+// ── Table head ───────────────────────────────────────────
 function buildTableHead() {
   const dotFor = c => c.dot.startsWith('linear')
     ? `<span class="col-dot" style="background:${c.dot};width:12px;height:12px;border-radius:3px;"></span>`
@@ -521,7 +859,81 @@ function buildTableHead() {
   </tr>`;
 }
 
-// ── Helpers ─────────────────────────────────────────────
+// ── Settings: color list ─────────────────────────────────
+function buildSettingsColorList() {
+  const list = document.getElementById('settings-color-list');
+  if (!list) return;
+  list.innerHTML = COLORS.map((c, i) => {
+    const swatchStyle = c.dot.startsWith('linear')
+      ? `background:${c.dot};border-radius:3px;`
+      : `background:${c.dot}`;
+    return `<div class="color-row" data-index="${i}">
+      <span class="color-row-swatch" style="${swatchStyle}"></span>
+      <input class="color-row-name" type="text" value="${c.label}"
+        onchange="window._renameColor(${i}, this.value)"
+        onblur="window._renameColor(${i}, this.value)">
+      ${c.baby ? '<span class="color-row-badge">baby</span>' : ''}
+      <button class="color-row-del" onclick="window._deleteColor(${i})" title="Delete color">✕</button>
+    </div>`;
+  }).join('');
+}
+
+// ── Settings panel open/close ────────────────────────────
+function openSettings() {
+  buildSettingsColorList();
+  document.getElementById('settings-overlay').classList.add('open');
+}
+
+function closeSettings() {
+  document.getElementById('settings-overlay').classList.remove('open');
+}
+
+function closeSettingsIfOutside(e) {
+  if (e.target === document.getElementById('settings-overlay')) closeSettings();
+}
+
+// ── Add color ────────────────────────────────────────────
+async function addColor() {
+  const nameEl  = document.getElementById('new-color-name');
+  const pickEl  = document.getElementById('new-color-picker');
+  const babyEl  = document.getElementById('new-color-baby');
+  const label   = nameEl.value.trim();
+  if (!label) { nameEl.focus(); return; }
+  const dot     = pickEl.value;
+  const baby    = babyEl.checked;
+  const key     = label.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Date.now();
+  const newColor = { key, label, dot, ...(baby ? { baby: true } : {}) };
+  const updated  = [...COLORS, newColor];
+  await saveColors(updated);
+  nameEl.value   = '';
+  pickEl.value   = '#3fffa2';
+  babyEl.checked = false;
+  document.getElementById('new-color-hex').textContent = '#3fffa2';
+}
+
+// ── Delete color ─────────────────────────────────────────
+async function deleteColor(index) {
+  const c = COLORS[index];
+  if (!confirm(`Remove "${c.label}" from the color list?\n\nExisting log data for this color is preserved.`)) return;
+  const updated = COLORS.filter((_, i) => i !== index);
+  await saveColors(updated);
+}
+
+// ── Rename color ─────────────────────────────────────────
+async function renameColor(index, newLabel) {
+  newLabel = newLabel.trim();
+  if (!newLabel || newLabel === COLORS[index].label) return;
+  const updated = COLORS.map((c, i) => i === index ? { ...c, label: newLabel } : c);
+  await saveColors(updated);
+}
+
+// ── Restore defaults ─────────────────────────────────────
+async function restoreDefaults() {
+  if (!confirm('Restore the original default color list? Your custom colors will be removed.')) return;
+  await saveColors(DEFAULT_COLORS);
+}
+
+// ── Helpers ──────────────────────────────────────────────
 function totalForEntry(e) {
   return COLORS.reduce((s, c) => s + (parseInt(e[c.key]) || 0), 0);
 }
@@ -532,7 +944,7 @@ function dash(v) {
     : v;
 }
 
-// ── Normal row ──────────────────────────────────────────
+// ── Normal row ───────────────────────────────────────────
 function normalRow(e) {
   const cells = COLORS.map(c => {
     const v = parseInt(e[c.key]) || 0;
@@ -550,7 +962,7 @@ function normalRow(e) {
   </tr>`;
 }
 
-// ── Edit row ────────────────────────────────────────────
+// ── Edit row ─────────────────────────────────────────────
 function editRow(e) {
   const colorCells = COLORS.map(c =>
     `<td><input class="edit-input" type="number" min="0" id="edit-${c.key}" value="${parseInt(e[c.key]) || 0}"></td>`
@@ -567,7 +979,7 @@ function editRow(e) {
   </tr>`;
 }
 
-// ── Table body ──────────────────────────────────────────
+// ── Table body ───────────────────────────────────────────
 function buildTableBody() {
   const tbody = document.getElementById('table-body');
   if (entries.length === 0) {
@@ -575,24 +987,22 @@ function buildTableBody() {
     return;
   }
   const sorted = [...entries].sort((a, b) => b.date.localeCompare(a.date));
-  const avgs = {};
+  const avgs   = {};
   COLORS.forEach(c => {
     const sum = entries.reduce((s, e) => s + (parseInt(e[c.key]) || 0), 0);
     avgs[c.key] = sum / entries.length;
   });
-  const rows = sorted.map(e => e.id === editingId ? editRow(e) : normalRow(e)).join('');
+  const rows     = sorted.map(e => e.id === editingId ? editRow(e) : normalRow(e)).join('');
   const avgCells = COLORS.map(c => {
     const a = avgs[c.key];
     return `<td>${a === 0 ? dash(0) : a.toFixed(1)}</td>`;
   }).join('');
   tbody.innerHTML = rows + `<tr class="avg-row">
-    <td>Avg / session</td>
-    ${avgCells}
-    <td></td><td></td>
+    <td>Avg / session</td>${avgCells}<td></td><td></td>
   </tr>`;
 }
 
-// ── Stats bar ───────────────────────────────────────────
+// ── Stats bar ─────────────────────────────────────────────
 function updateStats() {
   document.getElementById('stat-entries').textContent = entries.length;
   if (entries.length === 0) {
@@ -605,7 +1015,7 @@ function updateStats() {
   document.getElementById('stat-peak').textContent = Math.max(...entries.map(totalForEntry));
 }
 
-// ── Add ─────────────────────────────────────────────────
+// ── Add entry ─────────────────────────────────────────────
 async function addEntry() {
   const date = document.getElementById('f-date').value;
   if (!date) { alert('Please select a date.'); return; }
@@ -613,9 +1023,9 @@ async function addEntry() {
   btn.disabled = true;
   try {
     const entry = { date, note: document.getElementById('f-note').value.trim() };
-    COLORS.forEach(c => { entry[c.key] = parseInt(document.getElementById(`f-${c.key}`).value) || 0; });
+    COLORS.forEach(c => { entry[c.key] = parseInt(document.getElementById(`f-${c.key}`)?.value) || 0; });
     await addDoc(entriesCol, entry);
-    COLORS.forEach(c => { document.getElementById(`f-${c.key}`).value = ''; });
+    COLORS.forEach(c => { const el = document.getElementById(`f-${c.key}`); if (el) el.value = ''; });
     document.getElementById('f-note').value = '';
   } catch (err) {
     alert('Error saving entry: ' + err.message);
@@ -624,18 +1034,15 @@ async function addEntry() {
   }
 }
 
-// ── Delete ──────────────────────────────────────────────
+// ── Delete entry ──────────────────────────────────────────
 async function deleteEntry(id) {
   if (!confirm('Delete this entry?')) return;
   if (editingId === id) editingId = null;
-  try {
-    await deleteDoc(doc(db, 'entries', id));
-  } catch (err) {
-    alert('Error deleting: ' + err.message);
-  }
+  try { await deleteDoc(doc(db, 'entries', id)); }
+  catch (err) { alert('Error deleting: ' + err.message); }
 }
 
-// ── Edit ────────────────────────────────────────────────
+// ── Edit entry ────────────────────────────────────────────
 function startEdit(id) {
   editingId = id;
   render();
@@ -647,35 +1054,38 @@ async function saveEdit(id) {
   const date = document.getElementById('edit-date').value;
   if (!date) { alert('Date required.'); return; }
   const update = { date, note: document.getElementById('edit-note').value.trim() };
-  COLORS.forEach(c => { update[c.key] = parseInt(document.getElementById(`edit-${c.key}`).value) || 0; });
+  COLORS.forEach(c => { update[c.key] = parseInt(document.getElementById(`edit-${c.key}`)?.value) || 0; });
   try {
     await updateDoc(doc(db, 'entries', id), update);
     editingId = null;
     render();
-  } catch (err) {
-    alert('Error saving: ' + err.message);
-  }
+  } catch (err) { alert('Error saving: ' + err.message); }
 }
 
-function cancelEdit() {
-  editingId = null;
-  render();
-}
+function cancelEdit() { editingId = null; render(); }
 
-// ── Render ───────────────────────────────────────────────
-function render() {
-  buildTableBody();
-  updateStats();
-}
+function render() { buildTableBody(); updateStats(); }
 
-// ── Expose to inline onclick handlers ───────────────────
-window._addEntry    = addEntry;
-window._deleteEntry = deleteEntry;
-window._startEdit   = startEdit;
-window._saveEdit    = saveEdit;
-window._cancelEdit  = cancelEdit;
+// ── Expose to inline handlers ─────────────────────────────
+window._addEntry             = addEntry;
+window._deleteEntry          = deleteEntry;
+window._startEdit            = startEdit;
+window._saveEdit             = saveEdit;
+window._cancelEdit           = cancelEdit;
+window._openSettings         = openSettings;
+window._closeSettings        = closeSettings;
+window._closeSettingsIfOutside = closeSettingsIfOutside;
+window._addColor             = addColor;
+window._deleteColor          = deleteColor;
+window._renameColor          = renameColor;
+window._restoreDefaults      = restoreDefaults;
 
-// ── Firestore real-time listener ────────────────────────
+// ── Color picker hex preview ──────────────────────────────
+document.getElementById('new-color-picker').addEventListener('input', e => {
+  document.getElementById('new-color-hex').textContent = e.target.value;
+});
+
+// ── Firestore: entries listener ───────────────────────────
 onSnapshot(
   query(entriesCol, orderBy('date', 'desc')),
   snapshot => {
@@ -683,16 +1093,20 @@ onSnapshot(
     setSyncStatus('live');
     render();
   },
-  err => {
-    console.error('Firestore error:', err);
-    setSyncStatus('error');
-  }
+  err => { console.error('Firestore entries error:', err); setSyncStatus('error'); }
 );
 
-// ── Init ────────────────────────────────────────────────
-buildLegend();
-buildForm();
-buildTableHead();
+// ── Firestore: colors listener ────────────────────────────
+onSnapshot(colorsDoc, async snap => {
+  if (snap.exists() && snap.data()?.list?.length) {
+    COLORS = snap.data().list;
+  } else {
+    // First run — write defaults to Firestore
+    await saveColors(DEFAULT_COLORS);
+    COLORS = [...DEFAULT_COLORS];
+  }
+  rebuildUI();
+});
 </script>
 </body>
 </html>
