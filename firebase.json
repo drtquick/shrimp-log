@@ -1,0 +1,21 @@
+{
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "firestore.rules",
+      "README.md",
+      ".github/**",
+      "**/.*"
+    ],
+    "rewrites": [
+      {
+        "source": "/",
+        "destination": "/shrimp_log.html"
+      }
+    ]
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  }
+}

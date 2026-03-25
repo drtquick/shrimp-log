@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neocaridina Shrimp Log</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Fraunces:ital,wght@0,300;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0f0d;
+    --panel: #111816;
+    --border: #1e2d28;
+    --accent: #3fffa2;
+    --accent2: #00c4ff;
+    --text: #d4ede5;
+    --muted: #4a6b5e;
+    --danger: #ff6b6b;
+    --input-bg: #0d1a15;
+    --edit-bg: #0e1f1a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 80%, rgba(63,255,162,0.04) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 30% at 80% 20%, rgba(0,196,255,0.04) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .logo-group h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: 2.2rem;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  .logo-group h1 span { font-style: italic; color: var(--accent2); }
+
+  .logo-group p {
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-top: 0.3rem;
+  }
+
+  .stats-bar { display: flex; gap: 1.5rem; font-size: 0.7rem; color: var(--muted); }
+
+  .stat strong {
+    display: block;
+    font-size: 1.4rem;
+    color: var(--accent);
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    padding: 1rem 1.25rem;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+
+  .swatch { display: flex; align-items: center; gap: 0.4rem; font-size: 0.6rem; color: var(--muted); letter-spacing: 0.05em; }
+
+  .swatch-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.15);
+    flex-shrink: 0;
+  }
+
+  .entry-form {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .entry-form h2 {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: 1rem;
+    color: var(--accent);
+    margin-bottom: 1.25rem;
+    letter-spacing: 0.05em;
+  }
+
+  .form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: flex-end;
+  }
+
+  .field { display: flex; flex-direction: column; gap: 0.3rem; }
+
+  .field label {
+    font-size: 0.58rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+  }
+
+  .field input {
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    padding: 0.5rem 0.65rem;
+    border-radius: 3px;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 90px;
+  }
+
+  .field input:focus { border-color: var(--accent); }
+  .field.date-field input { width: 140px; }
+  .field.note-field input { width: 200px; }
+
+  .btn-add {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 0.5rem 1.25rem;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    text-transform: uppercase;
+    align-self: flex-end;
+    height: 36px;
+  }
+
+  .btn-add:hover { opacity: 0.85; }
+  .btn-add:active { transform: scale(0.97); }
+  .btn-add:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.7rem;
+    min-width: 900px;
+  }
+
+  thead tr {
+    background: #0d1a15;
+    border-bottom: 2px solid var(--border);
+  }
+
+  thead th {
+    padding: 0.65rem 0.75rem;
+    text-align: center;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    font-size: 0.58rem;
+    text-transform: uppercase;
+    font-weight: 400;
+    white-space: nowrap;
+  }
+
+  thead th:first-child { text-align: left; min-width: 110px; }
+
+  thead th .col-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-right: 5px;
+    vertical-align: middle;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+
+  thead th.baby-col { color: rgba(0,196,255,0.6); }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+
+  tbody tr:hover { background: rgba(63,255,162,0.03); }
+  tbody tr:last-child { border-bottom: none; }
+
+  tbody td {
+    padding: 0.6rem 0.75rem;
+    text-align: center;
+    color: var(--text);
+  }
+
+  tbody td:first-child {
+    text-align: left;
+    color: var(--accent2);
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+  }
+
+  .td-note {
+    text-align: left !important;
+    color: var(--muted) !important;
+    font-size: 0.62rem !important;
+    font-style: italic;
+    min-width: 120px;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .count-cell { font-weight: 700; color: var(--accent); min-width: 40px; }
+  .count-cell.zero { color: var(--muted); font-weight: 400; opacity: 0.4; }
+
+  .actions-cell { white-space: nowrap; }
+
+  .btn-icon {
+    background: none;
+    border: 1px solid transparent;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    cursor: pointer;
+    padding: 0.2rem 0.45rem;
+    border-radius: 3px;
+    transition: all 0.15s;
+    margin-left: 2px;
+  }
+
+  .btn-icon:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-icon.del:hover { border-color: var(--danger); color: var(--danger); }
+
+  tr.edit-row { background: var(--edit-bg) !important; }
+  tr.edit-row:hover { background: var(--edit-bg) !important; }
+  tr.edit-row td { padding: 0.35rem 0.4rem; }
+
+  .edit-input {
+    background: var(--input-bg);
+    border: 1px solid var(--accent);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    padding: 0.28rem 0.35rem;
+    border-radius: 3px;
+    outline: none;
+    width: 50px;
+    text-align: center;
+  }
+
+  .edit-input.date-input { width: 118px; text-align: left; }
+  .edit-input.note-input { width: 130px; text-align: left; }
+
+  .btn-save {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 0.28rem 0.65rem;
+    border-radius: 3px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: opacity 0.15s;
+    margin-right: 3px;
+  }
+
+  .btn-save:hover { opacity: 0.85; }
+
+  .btn-cancel {
+    background: none;
+    border: 1px solid var(--muted);
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    padding: 0.28rem 0.65rem;
+    border-radius: 3px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+
+  .btn-cancel:hover { border-color: var(--text); color: var(--text); }
+
+  .avg-row td {
+    background: #0d1a15;
+    color: var(--accent2) !important;
+    font-weight: 700;
+    border-top: 2px solid var(--border);
+  }
+
+  .avg-row td:first-child {
+    color: var(--muted) !important;
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 400;
+  }
+
+  .empty-state {
+    padding: 3rem;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-style: italic;
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+  }
+
+  .section-label {
+    font-size: 0.58rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .tooltip-note {
+    font-size: 0.58rem;
+    color: var(--muted);
+    margin-top: 1rem;
+    letter-spacing: 0.05em;
+  }
+
+  .sync-status {
+    font-size: 0.58rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .sync-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: background 0.3s;
+  }
+
+  .sync-dot.live { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+  .sync-dot.error { background: var(--danger); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="logo-group">
+      <h1>Neo<span>cardinia</span> Log</h1>
+      <p>Shrimp Population Tracker</p>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.5rem">
+      <div class="stats-bar">
+        <div class="stat"><strong id="stat-entries">0</strong>entries</div>
+        <div class="stat"><strong id="stat-last">—</strong>last logged</div>
+        <div class="stat"><strong id="stat-peak">—</strong>peak count</div>
+      </div>
+      <div class="sync-status">
+        <span class="sync-dot" id="sync-dot"></span>
+        <span id="sync-label">connecting…</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="legend" id="legend"></div>
+
+  <div class="entry-form">
+    <h2>+ New Observation</h2>
+    <div class="form-row" id="form-row"></div>
+    <p class="tooltip-note">Enter the count of each color you observe during your session. Leave blank or 0 for colors not seen.</p>
+  </div>
+
+  <p class="section-label">Observation History</p>
+  <div class="table-wrap">
+    <table>
+      <thead id="table-head"></thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js';
+import {
+  getFirestore, collection, addDoc, deleteDoc, updateDoc,
+  doc, onSnapshot, query, orderBy
+} from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAYFrcW0L8VNe3Wzbl-FI3P9cNN25N1qiM",
+  authDomain: "shrimp-log-f6567.firebaseapp.com",
+  projectId: "shrimp-log-f6567",
+  storageBucket: "shrimp-log-f6567.firebasestorage.app",
+  messagingSenderId: "53862171318",
+  appId: "1:53862171318:web:76b45702a9d0da2f12dc17",
+  measurementId: "G-910DGR178M"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+const entriesCol = collection(db, 'entries');
+
+const COLORS = [
+  { key: 'red',       label: 'Red',         dot: '#e8352a' },
+  { key: 'blue',      label: 'Blue',        dot: '#2a6de8' },
+  { key: 'orange',    label: 'Orange',      dot: '#f07020' },
+  { key: 'brown',     label: 'Brown',       dot: '#7a4a1e' },
+  { key: 'black',     label: 'Black',       dot: '#1a1a1a' },
+  { key: 'clear',     label: 'Clear',       dot: '#d0ece8' },
+  { key: 'rwb',       label: 'Red/Wht/Blu', dot: 'linear-gradient(135deg,#e8352a 33%,#fff 33% 66%,#2a6de8 66%)' },
+  { key: 'redclear',  label: 'Red/Clear',   dot: 'linear-gradient(135deg,#e8352a 50%,#d0ece8 50%)' },
+  { key: 'other',     label: 'Other',       dot: '#7a6e8a' },
+  { key: 'bluebaby',  label: 'Blue Baby',   dot: '#7abaff', baby: true },
+  { key: 'clearbaby', label: 'Clear Baby',  dot: '#e8f5f2', baby: true },
+  { key: 'blackbaby', label: 'Black Baby',  dot: '#3a3a3a', baby: true },
+  { key: 'otherbaby', label: 'Other Baby',  dot: '#b0a0c0', baby: true },
+];
+
+let entries   = [];
+let editingId = null;
+
+// ── Sync status ─────────────────────────────────────────
+function setSyncStatus(state) {
+  const dot   = document.getElementById('sync-dot');
+  const label = document.getElementById('sync-label');
+  dot.className = 'sync-dot' + (state === 'live' ? ' live' : state === 'error' ? ' error' : '');
+  label.textContent = state === 'live' ? 'live sync' : state === 'error' ? 'sync error' : 'connecting…';
+}
+
+// ── Legend ──────────────────────────────────────────────
+function buildLegend() {
+  document.getElementById('legend').innerHTML = COLORS.map(c => {
+    const babyMark = c.baby ? ' <span style="font-size:0.55rem;color:var(--accent2)">(baby)</span>' : '';
+    return `<div class="swatch">
+      <span class="swatch-dot" style="background:${c.dot}"></span>
+      ${c.label}${babyMark}
+    </div>`;
+  }).join('');
+}
+
+// ── New-entry form ──────────────────────────────────────
+function buildForm() {
+  const today = new Date().toISOString().split('T')[0];
+  let html = `<div class="field date-field">
+    <label>Date</label>
+    <input type="date" id="f-date" value="${today}">
+  </div>`;
+  COLORS.forEach(c => {
+    html += `<div class="field">
+      <label style="color:${c.baby ? 'var(--accent2)' : 'var(--muted)'}">${c.label}</label>
+      <input type="number" id="f-${c.key}" min="0" placeholder="0" style="width:62px">
+    </div>`;
+  });
+  html += `<div class="field note-field">
+    <label>Note</label>
+    <input type="text" id="f-note" placeholder="optional note...">
+  </div>`;
+  html += `<button class="btn-add" id="btn-log" onclick="window._addEntry()">Log Entry</button>`;
+  document.getElementById('form-row').innerHTML = html;
+}
+
+// ── Table head ──────────────────────────────────────────
+function buildTableHead() {
+  const dotFor = c => c.dot.startsWith('linear')
+    ? `<span class="col-dot" style="background:${c.dot};width:12px;height:12px;border-radius:3px;"></span>`
+    : `<span class="col-dot" style="background:${c.dot}"></span>`;
+  document.getElementById('table-head').innerHTML = `<tr>
+    <th style="text-align:left">Date</th>
+    ${COLORS.map(c => `<th class="${c.baby ? 'baby-col' : ''}">${dotFor(c)}${c.label}</th>`).join('')}
+    <th style="text-align:left">Note</th>
+    <th></th>
+  </tr>`;
+}
+
+// ── Helpers ─────────────────────────────────────────────
+function totalForEntry(e) {
+  return COLORS.reduce((s, c) => s + (parseInt(e[c.key]) || 0), 0);
+}
+
+function dash(v) {
+  return (v === 0 || v === '—')
+    ? '<span style="opacity:0.35;font-weight:400">—</span>'
+    : v;
+}
+
+// ── Normal row ──────────────────────────────────────────
+function normalRow(e) {
+  const cells = COLORS.map(c => {
+    const v = parseInt(e[c.key]) || 0;
+    return `<td class="count-cell ${v === 0 ? 'zero' : ''}">${dash(v)}</td>`;
+  }).join('');
+  const note = (e.note || '').replace(/"/g, '&quot;');
+  return `<tr data-id="${e.id}">
+    <td>${e.date}</td>
+    ${cells}
+    <td class="td-note" title="${note}">${e.note || ''}</td>
+    <td class="actions-cell">
+      <button class="btn-icon" onclick="window._startEdit('${e.id}')" title="Edit">✎</button>
+      <button class="btn-icon del" onclick="window._deleteEntry('${e.id}')" title="Delete">✕</button>
+    </td>
+  </tr>`;
+}
+
+// ── Edit row ────────────────────────────────────────────
+function editRow(e) {
+  const colorCells = COLORS.map(c =>
+    `<td><input class="edit-input" type="number" min="0" id="edit-${c.key}" value="${parseInt(e[c.key]) || 0}"></td>`
+  ).join('');
+  const noteVal = (e.note || '').replace(/"/g, '&quot;');
+  return `<tr class="edit-row" data-id="${e.id}">
+    <td><input class="edit-input date-input" type="date" id="edit-date" value="${e.date}"></td>
+    ${colorCells}
+    <td><input class="edit-input note-input" type="text" id="edit-note" value="${noteVal}" placeholder="note..."></td>
+    <td class="actions-cell">
+      <button class="btn-save" onclick="window._saveEdit('${e.id}')">Save</button>
+      <button class="btn-cancel" onclick="window._cancelEdit()">Cancel</button>
+    </td>
+  </tr>`;
+}
+
+// ── Table body ──────────────────────────────────────────
+function buildTableBody() {
+  const tbody = document.getElementById('table-body');
+  if (entries.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="${COLORS.length + 3}" class="empty-state">No observations yet — add your first entry above.</td></tr>`;
+    return;
+  }
+  const sorted = [...entries].sort((a, b) => b.date.localeCompare(a.date));
+  const avgs = {};
+  COLORS.forEach(c => {
+    const sum = entries.reduce((s, e) => s + (parseInt(e[c.key]) || 0), 0);
+    avgs[c.key] = sum / entries.length;
+  });
+  const rows = sorted.map(e => e.id === editingId ? editRow(e) : normalRow(e)).join('');
+  const avgCells = COLORS.map(c => {
+    const a = avgs[c.key];
+    return `<td>${a === 0 ? dash(0) : a.toFixed(1)}</td>`;
+  }).join('');
+  tbody.innerHTML = rows + `<tr class="avg-row">
+    <td>Avg / session</td>
+    ${avgCells}
+    <td></td><td></td>
+  </tr>`;
+}
+
+// ── Stats bar ───────────────────────────────────────────
+function updateStats() {
+  document.getElementById('stat-entries').textContent = entries.length;
+  if (entries.length === 0) {
+    document.getElementById('stat-last').textContent = '—';
+    document.getElementById('stat-peak').textContent = '—';
+    return;
+  }
+  const sorted = [...entries].sort((a, b) => b.date.localeCompare(a.date));
+  document.getElementById('stat-last').textContent = sorted[0].date;
+  document.getElementById('stat-peak').textContent = Math.max(...entries.map(totalForEntry));
+}
+
+// ── Add ─────────────────────────────────────────────────
+async function addEntry() {
+  const date = document.getElementById('f-date').value;
+  if (!date) { alert('Please select a date.'); return; }
+  const btn = document.getElementById('btn-log');
+  btn.disabled = true;
+  try {
+    const entry = { date, note: document.getElementById('f-note').value.trim() };
+    COLORS.forEach(c => { entry[c.key] = parseInt(document.getElementById(`f-${c.key}`).value) || 0; });
+    await addDoc(entriesCol, entry);
+    COLORS.forEach(c => { document.getElementById(`f-${c.key}`).value = ''; });
+    document.getElementById('f-note').value = '';
+  } catch (err) {
+    alert('Error saving entry: ' + err.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ── Delete ──────────────────────────────────────────────
+async function deleteEntry(id) {
+  if (!confirm('Delete this entry?')) return;
+  if (editingId === id) editingId = null;
+  try {
+    await deleteDoc(doc(db, 'entries', id));
+  } catch (err) {
+    alert('Error deleting: ' + err.message);
+  }
+}
+
+// ── Edit ────────────────────────────────────────────────
+function startEdit(id) {
+  editingId = id;
+  render();
+  const el = document.getElementById('edit-date');
+  if (el) el.focus();
+}
+
+async function saveEdit(id) {
+  const date = document.getElementById('edit-date').value;
+  if (!date) { alert('Date required.'); return; }
+  const update = { date, note: document.getElementById('edit-note').value.trim() };
+  COLORS.forEach(c => { update[c.key] = parseInt(document.getElementById(`edit-${c.key}`).value) || 0; });
+  try {
+    await updateDoc(doc(db, 'entries', id), update);
+    editingId = null;
+    render();
+  } catch (err) {
+    alert('Error saving: ' + err.message);
+  }
+}
+
+function cancelEdit() {
+  editingId = null;
+  render();
+}
+
+// ── Render ───────────────────────────────────────────────
+function render() {
+  buildTableBody();
+  updateStats();
+}
+
+// ── Expose to inline onclick handlers ───────────────────
+window._addEntry    = addEntry;
+window._deleteEntry = deleteEntry;
+window._startEdit   = startEdit;
+window._saveEdit    = saveEdit;
+window._cancelEdit  = cancelEdit;
+
+// ── Firestore real-time listener ────────────────────────
+onSnapshot(
+  query(entriesCol, orderBy('date', 'desc')),
+  snapshot => {
+    entries = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    setSyncStatus('live');
+    render();
+  },
+  err => {
+    console.error('Firestore error:', err);
+    setSyncStatus('error');
+  }
+);
+
+// ── Init ────────────────────────────────────────────────
+buildLegend();
+buildForm();
+buildTableHead();
+</script>
+</body>
+</html>
