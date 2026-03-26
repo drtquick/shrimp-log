@@ -4,5 +4,8 @@ service cloud.firestore {
     match /entries/{entry} {
       allow read, write: if true;
     }
+    match /config/{doc} {
+      allow read, write: if true;
+    }
   }
 }
