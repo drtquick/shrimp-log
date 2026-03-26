@@ -585,25 +585,32 @@
 
   .add-color-form input[type="text"]:focus { border-color: var(--accent); }
 
-  .color-picker-row {
+  .color-preview-row {
     display: flex;
     align-items: center;
     gap: 0.75rem;
   }
 
-  .color-picker-row input[type="color"] {
-    width: 36px;
-    height: 36px;
-    border: 1px solid var(--border);
-    border-radius: 3px;
-    background: none;
-    cursor: pointer;
-    padding: 2px;
+  .color-preview-swatch {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.15);
+    flex-shrink: 0;
+    background: #7a6e8a;
+    transition: background 0.25s;
   }
 
-  .color-picker-row span {
-    font-size: 0.65rem;
+  .color-preview-swatch.gradient {
+    border-radius: 4px;
+  }
+
+  .color-preview-label {
+    font-size: 0.62rem;
     color: var(--muted);
+    font-style: italic;
+    flex: 1;
+    line-height: 1.4;
   }
 
   .baby-toggle-row {
@@ -686,13 +693,13 @@
       <div class="add-color-form">
         <div>
           <label>Name</label>
-          <input type="text" id="new-color-name" placeholder="e.g. Green, Pink Rili…">
+          <input type="text" id="new-color-name" placeholder="e.g. Yellow, Crystal Red, Blue/White Rili…" oninput="window._updateColorPreview()">
         </div>
         <div>
-          <label>Color</label>
-          <div class="color-picker-row">
-            <input type="color" id="new-color-picker" value="#3fffa2">
-            <span id="new-color-hex">#3fffa2</span>
+          <label>Color Preview</label>
+          <div class="color-preview-row">
+            <span class="color-preview-swatch" id="new-color-swatch"></span>
+            <span class="color-preview-label" id="new-color-desc">Type a name above — colors are inferred automatically.</span>
           </div>
         </div>
         <label class="baby-toggle-row">
@@ -894,23 +901,103 @@ function closeSettingsIfOutside(e) {
   if (e.target === document.getElementById('settings-overlay')) closeSettings();
 }
 
+// ── Color inference from name ─────────────────────────────
+// Maps color keywords → hex. Order matters: more specific first.
+const COLOR_WORDS = [
+  // Specific shrimp names / patterns
+  ['snowball',    '#f0f0f0'], ['panda',       '#1a1a1a'],
+  ['rili',        'rili'   ], // special — handled below
+  ['bolt',        '#1a3a8a'], ['galaxy',      '#1a1060'],
+  ['shadow',      '#1a1a2a'], ['wine',        '#722f37'],
+  ['ruby',        '#9b1b30'], ['cherry',      '#de3163'],
+  ['rose',        '#f05070'], ['magenta',     '#e82d8b'],
+  ['violet',      '#8b00ff'], ['lavender',    '#c8a0e0'],
+  ['indigo',      '#4b0082'], ['sapphire',    '#0f52ba'],
+  ['cobalt',      '#0047ab'], ['royal',       '#4169e1'],
+  ['sky',         '#87ceeb'], ['teal',        '#1ab8a8'],
+  ['turquoise',   '#1ab8cc'], ['aqua',        '#00d4cc'],
+  ['jade',        '#00a86b'], ['emerald',     '#50c878'],
+  ['olive',       '#808000'], ['bamboo',      '#90c040'],
+  ['lime',        '#80d820'], ['forest',      '#228b22'],
+  ['lemon',       '#f5e642'], ['golden',      '#d4a017'],
+  ['gold',        '#d4a017'], ['tangerine',   '#f28500'],
+  ['chocolate',   '#4a2c0a'], ['copper',      '#b87333'],
+  ['caramel',     '#c68642'], ['tan',         '#c8a47a'],
+  ['cream',       '#f5e6c8'], ['ivory',       '#fffff0'],
+  ['carbon',      '#2a2a2a'], ['steel',       '#708090'],
+  ['silver',      '#c0c0c0'], ['grey',        '#888888'],
+  ['gray',        '#888888'],
+  // Plain colors
+  ['red',         '#e8352a'], ['blue',        '#2a6de8'],
+  ['orange',      '#f07020'], ['brown',       '#7a4a1e'],
+  ['black',       '#1a1a1a'], ['white',       '#f0f0f0'],
+  ['clear',       '#d0ece8'], ['yellow',      '#f5c842'],
+  ['green',       '#2db85a'], ['purple',      '#8b2de8'],
+  ['pink',        '#f06090'],
+];
+
+function inferDot(label) {
+  const t = label.toLowerCase();
+  const hits = [];
+
+  for (const [word, hex] of COLOR_WORDS) {
+    if (!t.includes(word)) continue;
+    if (hex === 'rili') {
+      // Rili = body color + clear mid-section. Push clear alongside whatever other color is found.
+      hits.push('#d0ece8');
+    } else {
+      hits.push(hex);
+    }
+  }
+
+  // Deduplicate while preserving order
+  const unique = [...new Set(hits)];
+  if (unique.length === 0) return { dot: '#7a6e8a', desc: 'Unknown — will appear grey' };
+  if (unique.length === 1) return { dot: unique[0], desc: 'Solid color detected' };
+
+  // Build gradient for 2 or 3 colors
+  const pct  = Math.round(100 / unique.length);
+  const stops = unique.map((c, i) => {
+    const from = i * pct;
+    const to   = i === unique.length - 1 ? 100 : (i + 1) * pct;
+    return `${c} ${from}% ${to}%`;
+  });
+  return {
+    dot:  `linear-gradient(135deg, ${stops.join(', ')})`,
+    desc: `${unique.length}-color gradient detected`,
+  };
+}
+
+function updateColorPreview() {
+  const label   = document.getElementById('new-color-name').value.trim();
+  const swatch  = document.getElementById('new-color-swatch');
+  const descEl  = document.getElementById('new-color-desc');
+  if (!label) {
+    swatch.style.background = '#7a6e8a';
+    swatch.classList.remove('gradient');
+    descEl.textContent = 'Type a name above — colors are inferred automatically.';
+    return;
+  }
+  const { dot, desc } = inferDot(label);
+  swatch.style.background = dot;
+  swatch.classList.toggle('gradient', dot.startsWith('linear'));
+  descEl.textContent = desc;
+}
+
 // ── Add color ────────────────────────────────────────────
 async function addColor() {
   const nameEl  = document.getElementById('new-color-name');
-  const pickEl  = document.getElementById('new-color-picker');
   const babyEl  = document.getElementById('new-color-baby');
   const label   = nameEl.value.trim();
   if (!label) { nameEl.focus(); return; }
-  const dot     = pickEl.value;
-  const baby    = babyEl.checked;
-  const key     = label.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Date.now();
+  const { dot }  = inferDot(label);
+  const baby     = babyEl.checked;
+  const key      = label.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Date.now();
   const newColor = { key, label, dot, ...(baby ? { baby: true } : {}) };
-  const updated  = [...COLORS, newColor];
-  await saveColors(updated);
+  await saveColors([...COLORS, newColor]);
   nameEl.value   = '';
-  pickEl.value   = '#3fffa2';
   babyEl.checked = false;
-  document.getElementById('new-color-hex').textContent = '#3fffa2';
+  updateColorPreview();
 }
 
 // ── Delete color ─────────────────────────────────────────
@@ -1069,23 +1156,19 @@ function cancelEdit() { editingId = null; render(); }
 function render() { buildTableBody(); updateStats(); }
 
 // ── Expose to inline handlers ─────────────────────────────
-window._addEntry             = addEntry;
-window._deleteEntry          = deleteEntry;
-window._startEdit            = startEdit;
-window._saveEdit             = saveEdit;
-window._cancelEdit           = cancelEdit;
-window._openSettings         = openSettings;
-window._closeSettings        = closeSettings;
+window._addEntry               = addEntry;
+window._deleteEntry            = deleteEntry;
+window._startEdit              = startEdit;
+window._saveEdit               = saveEdit;
+window._cancelEdit             = cancelEdit;
+window._openSettings           = openSettings;
+window._closeSettings          = closeSettings;
 window._closeSettingsIfOutside = closeSettingsIfOutside;
-window._addColor             = addColor;
-window._deleteColor          = deleteColor;
-window._renameColor          = renameColor;
-window._restoreDefaults      = restoreDefaults;
-
-// ── Color picker hex preview ──────────────────────────────
-document.getElementById('new-color-picker').addEventListener('input', e => {
-  document.getElementById('new-color-hex').textContent = e.target.value;
-});
+window._addColor               = addColor;
+window._deleteColor            = deleteColor;
+window._renameColor            = renameColor;
+window._restoreDefaults        = restoreDefaults;
+window._updateColorPreview     = updateColorPreview;
 
 // ── Firestore: entries listener ───────────────────────────
 onSnapshot(
