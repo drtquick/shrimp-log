@@ -10,6 +10,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Inject build number
+        run: |
+          BUILD="β$(git rev-list --count HEAD).$(git rev-parse --short HEAD)"
+          sed -i "s/__BUILD__/$BUILD/g" shrimp_log.html
+          echo "Build: $BUILD"
 
       - name: Install Firebase CLI
         run: npm install -g firebase-tools

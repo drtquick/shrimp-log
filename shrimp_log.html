@@ -673,6 +673,34 @@
     letter-spacing: 0.03em;
   }
 
+  /* ── Build badge ── */
+  .build-badge {
+    font-size: 0.52rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    opacity: 0.55;
+    font-family: 'Space Mono', monospace;
+    white-space: nowrap;
+  }
+
+  /* ── Drag-to-reorder ── */
+  .drag-handle {
+    cursor: grab;
+    color: var(--muted);
+    font-size: 0.9rem;
+    flex-shrink: 0;
+    user-select: none;
+    opacity: 0.35;
+    transition: opacity 0.15s;
+    line-height: 1;
+  }
+  .color-row:hover .drag-handle { opacity: 0.85; }
+  .color-row.dragging { opacity: 0.35; border-style: dashed; }
+  .color-row.drag-over {
+    border-color: var(--accent);
+    box-shadow: 0 -2px 0 var(--accent);
+  }
+
   /* ── Mobile / responsive ── */
   @media (max-width: 768px) {
     .container {
@@ -857,6 +885,7 @@
           <span class="sync-dot" id="sync-dot"></span>
           <span id="sync-label">connecting…</span>
         </div>
+        <span class="build-badge">__BUILD__</span>
         <button class="btn-settings" onclick="window._openSettings()">⚙ Colors</button>
       </div>
     </div>
@@ -998,7 +1027,8 @@ function buildSettingsColorList() {
     const swatchStyle = c.dot.startsWith('linear')
       ? `background:${c.dot};border-radius:3px;`
       : `background:${c.dot}`;
-    return `<div class="color-row" data-index="${i}">
+    return `<div class="color-row" data-index="${i}" draggable="true">
+      <span class="drag-handle" title="Drag to reorder">⠿</span>
       <span class="color-row-swatch" style="${swatchStyle}"></span>
       <input class="color-row-name" type="text" value="${c.label}"
         onchange="window._renameColor(${i}, this.value)"
@@ -1007,6 +1037,40 @@ function buildSettingsColorList() {
       <button class="color-row-del" onclick="window._deleteColor(${i})" title="Delete color">✕</button>
     </div>`;
   }).join('');
+
+  // ── Drag-and-drop reordering ──
+  let dragSrcIdx = null;
+  list.querySelectorAll('.color-row').forEach(row => {
+    row.addEventListener('dragstart', e => {
+      dragSrcIdx = parseInt(row.dataset.index);
+      row.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    row.addEventListener('dragend', () => {
+      row.classList.remove('dragging');
+      list.querySelectorAll('.color-row').forEach(r => r.classList.remove('drag-over'));
+    });
+    row.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      list.querySelectorAll('.color-row').forEach(r => r.classList.remove('drag-over'));
+      row.classList.add('drag-over');
+    });
+    row.addEventListener('dragleave', () => {
+      row.classList.remove('drag-over');
+    });
+    row.addEventListener('drop', async e => {
+      e.preventDefault();
+      list.querySelectorAll('.color-row').forEach(r => r.classList.remove('drag-over'));
+      const dropIdx = parseInt(row.dataset.index);
+      if (dragSrcIdx === null || dragSrcIdx === dropIdx) return;
+      const updated = [...COLORS];
+      const [moved] = updated.splice(dragSrcIdx, 1);
+      updated.splice(dropIdx, 0, moved);
+      dragSrcIdx = null;
+      await saveColors(updated);
+    });
+  });
 }
 
 // ── Settings panel open/close ────────────────────────────
